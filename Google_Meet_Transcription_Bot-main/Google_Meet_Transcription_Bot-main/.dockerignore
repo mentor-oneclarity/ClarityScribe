@@ -1,0 +1,45 @@
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Secrets (injected via env vars at runtime)
+.env
+.env.*
+
+# Bot browser profiles (large, machine-specific)
+bot/bot_browser_profile/
+bot/bot_browser_profile_*/
+
+# Credentials (should never be baked into image)
+bot/calendar_token.json
+bot/calendar_credentials.json
+
+# Bot Google session (sensitive — restored from BOT_SESSION_B64 at startup)
+bot/session_state.json
+
+# Logs
+logs/
+*.log
+
+# Local DB file
+*.db
+*.db-shm
+*.db-wal
+
+# macOS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Docs
+README.md

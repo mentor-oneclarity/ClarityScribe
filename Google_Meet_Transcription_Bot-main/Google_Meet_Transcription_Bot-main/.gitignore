@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets / credentials
+credentials.json
+token.json
+service_account.json
+bot/calendar_token.json
+bot/calendar_credentials.json
+
+# Bot browser session (local only — contains user cookies/cache)
+bot/bot_browser_profile/
+bot/bot_browser_profile_*/
+
+# Bot Google session (sensitive — restored from BOT_SESSION_B64 at runtime)
+bot/session_state.json
+bot/session_state.json.bak
+
+# Runtime data (screenshots, local db, transcripts) — generated, not source
+uploads/
+*.bak
+
+# Docker
+*.pid
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

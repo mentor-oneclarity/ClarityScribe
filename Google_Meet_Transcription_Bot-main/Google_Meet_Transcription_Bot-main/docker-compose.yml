@@ -1,0 +1,188 @@
+version: '3.9'
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FastAPI Backend Service
+  # ─────────────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meeting-bot-backend
+    ports:
+      - "6050:6050"
+    environment:
+      # Database — DB_HOST hardcoded to the compose service name; never use .env value
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-ai_meeting_db}
+      DB_USER: ${DB_USER:-appuser}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Azure OpenAI
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-https://your-resource.openai.azure.com/}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+      AZURE_OPENAI_DEPLOYMENT_NAME: ${AZURE_OPENAI_DEPLOYMENT_NAME}
+      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION:-2025-04-01-preview}
+
+      # Sarvam STT
+      SARVAM_API_KEY: ${SARVAM_API_KEY}
+      SARVAM_LANGUAGE: ${SARVAM_LANGUAGE:-unknown}
+      STT_MODEL: ${STT_MODEL:-saarika:v2.5}
+      AUDIO_CHUNK_SEC: ${AUDIO_CHUNK_SEC:-5}
+      AUDIO_DEVICE_INDEX: ""        # blank = system default (not used in production)
+      PULSE_SOURCE: "MeetingSink.monitor"  # PulseAudio source for ffmpeg — explicit sink monitor
+
+      # Bot Settings
+      # false = headful Chrome + Xvfb → routes all Meet audio to PulseAudio/MeetingSink
+      #         → ffmpeg captures ALL speakers (not just active speaker)
+      # true  = headless + --use-fake-device-for-media-stream → WebRTC JS interceptor only
+      HEADLESS: "true"
+      BOT_DISPLAY_NAME: ${BOT_DISPLAY_NAME:-OneClarity AI}
+      # Guest mode: bot joins as anonymous guest without Google auth (host must admit it).
+      # Set to "true" if you don't have/want a Google bot account.
+      # Set to "false" only if you have BOT_GOOGLE_EMAIL + BOT_GOOGLE_PASSWORD or BOT_SESSION_B64.
+      BOT_GUEST_MODE: ${BOT_GUEST_MODE:-false}
+
+      # Bot Google Auth — REQUIRED for auto-login and session restore
+      BOT_GOOGLE_EMAIL: ${BOT_GOOGLE_EMAIL:-}
+      BOT_GOOGLE_PASSWORD: ${BOT_GOOGLE_PASSWORD:-}
+      # Base64-encoded session_state.json (export from working session, use in CI/CD)
+      BOT_SESSION_B64: ${BOT_SESSION_B64:-}
+
+      # Google Calendar
+      CALENDAR_LOOKAHEAD_MINUTES: ${CALENDAR_LOOKAHEAD_MINUTES:-2}
+      # Base64-encoded calendar_token.json (run: base64 -i bot/calendar_token.json)
+      CALENDAR_TOKEN_B64: ${CALENDAR_TOKEN_B64:-}
+      CALENDAR_POLL_SEC: ${CALENDAR_POLL_SEC:-60}
+
+      # User Auth
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRE_DAYS: ${JWT_EXPIRE_DAYS:-7}
+
+      # Google OAuth (user calendar)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+
+      # Token encryption
+      TOKEN_ENCRYPT_KEY: ${TOKEN_ENCRYPT_KEY}
+
+      # Email
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@oneclarity.ai}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-OneClarity}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      # CORS — set to your frontend URL in production
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+
+      # Email via AWS SES
+      AWS_SES_ACCESS_KEY_ID: ${AWS_SES_ACCESS_KEY_ID:-}
+      AWS_SES_SECRET_ACCESS_KEY: ${AWS_SES_SECRET_ACCESS_KEY:-}
+      AWS_SES_REGION: ${AWS_SES_REGION:-ap-south-1}
+      SES_FROM: ${SES_FROM:-}
+
+      # MySQL guard — prevents silent SQLite fallback if DB is unreachable
+      REQUIRE_MYSQL: ${REQUIRE_MYSQL:-true}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./bot/bot_browser_profile:/app/bot/bot_browser_profile
+      - logs_data:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - meeting-bot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # MySQL Database Service (Production)
+  # ─────────────────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: meeting-bot-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: ai_meeting_db
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - meeting-bot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Redis Cache (Optional - for session management / future scaling)
+  # ─────────────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: meeting-bot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - meeting-bot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # pgAdmin for MySQL Management (Optional)
+  # ─────────────────────────────────────────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: meeting-bot-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: rootpass
+      PMA_DB: ai_meeting_db
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - meeting-bot-network
+    restart: unless-stopped
+
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  logs_data:
+    driver: local
+
+networks:
+  meeting-bot-network:
+    driver: bridge

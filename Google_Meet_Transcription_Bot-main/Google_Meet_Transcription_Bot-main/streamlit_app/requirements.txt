@@ -1,0 +1,4 @@
+streamlit==1.39.0
+streamlit-image-coordinates==0.1.9
+requests==2.34.2
+python-dotenv==1.0.1
