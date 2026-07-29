@@ -16,7 +16,7 @@ GPU: ~5-10x realtime
 
 import logging
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 

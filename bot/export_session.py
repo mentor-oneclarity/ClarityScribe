@@ -14,7 +14,6 @@ it automatically on every deploy — no SSH needed.
 import asyncio
 import base64
 import json
-import sys
 from pathlib import Path
 
 from playwright.async_api import async_playwright

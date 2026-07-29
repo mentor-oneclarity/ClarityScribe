@@ -12,7 +12,6 @@ from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from fastapi.responses import JSONResponse
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
@@ -25,9 +24,9 @@ from api.models import (
 )
 from core.bot_manager import auth_status, bot_manager
 from core.login_session import login_session
-from core.database import AuditLog, Meeting, MeetingMaster, Participant, TranscriptSegment, async_session, get_session
+from core.database import AuditLog, Meeting, Participant, TranscriptSegment, async_session, get_session
 from core.logger import backend_logger
-from helpers.summarizer import generate_summary, generate_and_email_summary
+from helpers.summarizer import generate_and_email_summary
 from helpers.translator import schedule_translation
 
 logger = backend_logger

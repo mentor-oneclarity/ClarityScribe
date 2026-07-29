@@ -31,9 +31,8 @@ from playwright.async_api import (
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from dotenv import load_dotenv
-import numpy as np
 
-from bot.utils.audio_capture import CHUNK_SECONDS, SAMPLERATE, AudioCapturer, to_wav
+from bot.utils.audio_capture import SAMPLERATE, AudioCapturer
 from bot.utils.backend_client import BackendClient
 from bot.utils.logger import get_logger
 from bot.utils.sarvam_client import SarvamClient
@@ -3448,7 +3447,6 @@ class MeetBot:
         """WebRTC per-track audio — captures active speaker with known name."""
         webrtc = WebRTCAudioCapturer(self.page)
         webrtc_got_data = False
-        webrtc_start = time.time()
         # Fallback track_id → participant_name mapping.
         # Google Meet's SFU provides only ~3 audio slots for any size meeting.
         # Slots are assigned in join order — first joiner → slot 0, etc.
@@ -3508,7 +3506,8 @@ class MeetBot:
                 # overlap lookups and _cap_pending merge use the correct time range.
                 _chunk_arrive = time.time() - self.meeting_start_time
                 try:
-                    import io as _io, wave as _wv
+                    import io as _io
+                    import wave as _wv
                     with _wv.open(_io.BytesIO(wav_bytes)) as _wf:
                         _chunk_dur = _wf.getnframes() / float(_wf.getframerate())
                 except Exception:
@@ -3992,8 +3991,6 @@ class MeetBot:
         Uses ffmpeg (not sounddevice) so PulseAudio source names work correctly.
         Industry standard: Recall.ai, Fireflies all use ffmpeg for audio capture."""
         import shutil as _shutil
-        import io as _io
-        import wave as _wave
 
         # MUST be MeetingSink.monitor — that is Chrome's audio output sink's monitor.
         # "default" resolves to SilentMic.monitor (the silent bot mic), not speech audio.
@@ -4440,7 +4437,7 @@ class MeetBot:
     @staticmethod
     def _parse_multiline_block(raw: str, current: Dict[str, str]) -> None:
         """Parse a multi-line caption block into {speaker: text} entries."""
-        lines = [l.strip() for l in raw.splitlines() if l.strip()]
+        lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
         i = 0
         while i < len(lines):
             line = lines[i]

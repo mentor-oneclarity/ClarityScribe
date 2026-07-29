@@ -1,7 +1,6 @@
 # build: batch-migrations-v2
 """Creates all database tables. Safe to run multiple times (IF NOT EXISTS)."""
 import asyncio
-import os
 import sys
 from pathlib import Path
 
@@ -10,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from dotenv import load_dotenv
 load_dotenv()
 
-from core.database import Base, engine, _db_host, _db_port, _db_name, _db_user, _db_password, _connect_args
+from core.database import Base, engine, _db_host, _db_port, _db_name, _db_user, _db_password, _connect_args  # noqa: E402 — must follow load_dotenv()
 
 
 async def _ensure_database() -> None:

@@ -12,11 +12,6 @@ jobs:
   lint:
     name: Lint (ruff + black)
     runs-on: ubuntu-latest
-    # Advisory for now — the codebase predates this lint config and hasn't had a
-    # dedicated formatting pass yet (~25 pre-existing ruff findings, no black
-    # formatting applied). Flip continue-on-error to false once that cleanup PR
-    # lands, so this becomes a real gate for new contributions.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +26,10 @@ jobs:
         run: ruff check .
 
       - name: black --check
+        # Advisory for now — the codebase hasn't had a dedicated black formatting
+        # pass yet (would reformat ~28 files). Remove continue-on-error once that
+        # cleanup PR lands, so this becomes a real gate for new contributions.
+        continue-on-error: true
         run: black --check .
 
   secret-scan:

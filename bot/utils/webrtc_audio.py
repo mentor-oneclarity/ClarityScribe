@@ -19,7 +19,7 @@ import asyncio
 import base64
 import logging
 import os
-from typing import AsyncIterator, Optional
+from typing import AsyncIterator
 
 logger = logging.getLogger("bot")
 

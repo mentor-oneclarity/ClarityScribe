@@ -1,14 +1,13 @@
 import logging
 import os
 import socket
-from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import JSON, Boolean, Column, Date, DateTime, Float, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
 

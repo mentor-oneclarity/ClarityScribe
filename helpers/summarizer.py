@@ -2,7 +2,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI, AsyncOpenAI
@@ -156,7 +156,7 @@ def _assess_transcript_quality(transcript: str) -> dict:
     Analyse transcript content and return quality metrics.
     Does NOT call the LLM — pure local heuristics.
     """
-    lines = [l.strip() for l in transcript.strip().split("\n") if l.strip()]
+    lines = [ln.strip() for ln in transcript.strip().split("\n") if ln.strip()]
 
     events: list[str] = []
     participants: set[str] = set()
@@ -478,7 +478,6 @@ async def _merge_chunk_summaries(
         f"Segment {i + 1}:\n{s}" for i, s in enumerate(chunk_summaries)
     )
     participants_str = ", ".join(participants) if participants else "See transcript"
-    stats_block = f"\nSpeaker participation:\n{speaker_stats}\n" if speaker_stats.strip() else ""
 
     if duration_minutes >= 60:
         h, m = divmod(duration_minutes, 60)
