@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for AI Meeting Bot
 # Stage 1: Python build environment
-FROM python:3.11-slim-bookworm AS builder
+FROM python:3.14-slim-bookworm AS builder
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir -U pip && \
 
 
 # Stage 2: Runtime environment
-FROM python:3.11-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 WORKDIR /app
 
