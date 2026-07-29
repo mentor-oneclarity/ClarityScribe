@@ -53,7 +53,7 @@ This bot:
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     FASTAPI BACKEND  (main.py, port 6050)            │
 │                                                                       │
-│  core/bot_manager.py   API/routes.py           helpers/summarizer.py │
+│  core/bot_manager.py   api/routes.py           helpers/summarizer.py │
 │  - launches bots       - /meetings, /bot/*      - Azure OpenAI       │
 │  - max N concurrent    - /transcript, /calendar - chunk + summarize  │
 │  - crash watchdog                               - triggers email    │
@@ -169,8 +169,8 @@ table — see [docs/database.md](database.md).
 | Path | Role |
 |---|---|
 | `main.py` | FastAPI app entry point. Lifespan hook restores the bot's saved session from `BOT_SESSION_B64`, cleans up stale meeting rows left over from a crash, starts the startup-login task and the calendar auto-join loop, and mounts the static frontend |
-| `API/routes.py` | All REST + SSE routes. Optional `X-API-Key` enforcement via `BOT_API_KEY`, in-memory rate limiting, meeting title sanitization (strips emails from calendar-sourced titles) |
-| `API/models.py` | Pydantic request/response models |
+| `api/routes.py` | All REST + SSE routes. Optional `X-API-Key` enforcement via `BOT_API_KEY`, in-memory rate limiting, meeting title sanitization (strips emails from calendar-sourced titles) |
+| `api/models.py` | Pydantic request/response models |
 | `core/bot_manager.py` | Bot lifecycle: concurrency limits, crash watchdog, `join()` / `stop()` |
 | `core/database.py` | SQLAlchemy async engine + ORM models. MySQL primary, SQLite fallback; `REQUIRE_MYSQL=true` disables the silent fallback in production |
 | `core/login_session.py` | Backs the Streamlit "Google Login" remote screenshot-driven flow for headless/Docker environments with no display |

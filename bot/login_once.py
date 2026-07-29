@@ -3,9 +3,11 @@ Run this script ONCE to authenticate the bot's Google account.
 
     python -m bot.login_once
 
-A Chromium window opens. Log in with oneclarity.bot@oneclarity.ai,
-then wait for the Google Meet lobby to appear.  Press ENTER here.
-The session is saved to bot/bot_browser_profile/ and bot/session_state.json.
+A Chromium window opens. Log in with your bot's Google account
+(set BOT_GOOGLE_EMAIL / BOT_GOOGLE_PASSWORD in .env — never hardcode
+credentials here), then wait for the Google Meet lobby to appear.
+Press ENTER here. The session is saved to bot/bot_browser_profile/
+and bot/session_state.json.
 """
 
 import asyncio
@@ -29,8 +31,8 @@ async def main() -> None:
     print()
     print("  Steps:")
     print("  1. A Chrome window will open at Google Sign-In.")
-    print("  2. Sign in as:  oneclarity.bot@oneclarity.ai")
-    print("  3. Password:    oneclarity.bot@2025")
+    print("  2. Sign in as:  <your bot's Google account email>")
+    print("  3. Password:    <your bot's Google account password>")
     print("  4. Once you see the Google account home page, come back here.")
     print("  5. Press ENTER — session will be saved automatically.")
     print("=" * 60)

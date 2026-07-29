@@ -59,7 +59,7 @@ BOT_SESSION_B64=<paste contents of session_b64.txt>
 ## Transcript Not Showing
 
 The live transcript is streamed over SSE at `GET /meetings/{id}/transcript/live`
-(implemented in `API/routes.py`). If nothing shows up on the dashboard:
+(implemented in `api/routes.py`). If nothing shows up on the dashboard:
 
 1. **Confirm the SSE connection opens at all.** From a terminal:
    ```bash

@@ -56,23 +56,9 @@ services:
       CALENDAR_TOKEN_B64: ${CALENDAR_TOKEN_B64:-}
       CALENDAR_POLL_SEC: ${CALENDAR_POLL_SEC:-60}
 
-      # User Auth
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
-      JWT_EXPIRE_DAYS: ${JWT_EXPIRE_DAYS:-7}
-
-      # Google OAuth (user calendar)
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
-
-      # Token encryption
-      TOKEN_ENCRYPT_KEY: ${TOKEN_ENCRYPT_KEY}
-
       # Email
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@oneclarity.ai}
-      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-OneClarity}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@example.com}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Meeting Bot}
 
       # Logging
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -113,7 +99,7 @@ services:
     image: mysql:8.0
     container_name: meeting-bot-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
       MYSQL_DATABASE: ai_meeting_db
       MYSQL_USER: appuser
       MYSQL_PASSWORD: ${DB_PASSWORD}
@@ -163,7 +149,7 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_USER: root
-      PMA_PASSWORD: rootpass
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
       PMA_DB: ai_meeting_db
     ports:
       - "8080:80"

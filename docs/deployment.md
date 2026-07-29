@@ -207,7 +207,7 @@ them):
 | `SARVAM_LANGUAGE` | `bot/utils/sarvam_client.py` | Default `unknown` (auto-detect) |
 | `AUDIO_CHUNK_SEC` | Docker Compose default `5` | Audio chunk size sent to STT |
 | `ALLOWED_ORIGINS` | `main.py` | Comma-separated CORS allow-list. Leave unset only for local dev — it defaults to `*` |
-| `BOT_API_KEY` | `API/routes.py`, Streamlit `lib/common.py` | If set, all bot-control endpoints require an `X-API-Key` header matching this value |
+| `BOT_API_KEY` | `api/routes.py`, Streamlit `lib/common.py` | If set, all bot-control endpoints require an `X-API-Key` header matching this value |
 | `REQUIRE_MYSQL` | `core/database.py` | `true` fails startup loudly instead of silently falling back to SQLite when MySQL is unreachable — recommended in production |
 | `AZURE_MYSQL_SSL_NO_VERIFY` | `core/database.py` | Only for self-signed MySQL certs; leave `false` in production |
 | `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | `core/database.py` | SQLAlchemy connection pool tuning (defaults `5` / `10`) |

@@ -30,7 +30,7 @@ logger = logging.getLogger("backend")
 _AWS_ACCESS_KEY = os.getenv("AWS_SES_ACCESS_KEY_ID", "")
 _AWS_SECRET_KEY = os.getenv("AWS_SES_SECRET_ACCESS_KEY", "")
 _AWS_REGION     = os.getenv("AWS_SES_REGION", "ap-south-1")
-_SES_FROM       = os.getenv("SES_FROM", "OneClarity AI <mentor@oneclarity.ai>")
+_SES_FROM       = os.getenv("SES_FROM", "Meeting Bot <noreply@example.com>")
 
 # SES hard limit: 50 total recipients (TO + CC + BCC) per send_email call.
 _SES_MAX_RECIPIENTS = 50

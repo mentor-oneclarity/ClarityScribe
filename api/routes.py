@@ -1,6 +1,8 @@
 import asyncio
+import hmac
 import json
 import os
+import re
 import time as _time
 from collections import defaultdict
 from datetime import datetime
@@ -15,7 +17,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from API.models import (
+from api.models import (
     BotJoinRequest, LoginClickRequest, LoginKeyRequest,
     LoginNavRequest, LoginTypeRequest,
     MeetingCreate, MeetingEmailsUpdate, ParticipantUpsert,
@@ -40,6 +42,25 @@ _BOT_API_KEY: str = os.getenv("BOT_API_KEY", "").strip()
 _rl_buckets: dict = defaultdict(list)
 
 
+def _safe_identifier(env_name: str, default: str) -> str:
+    """Read a SQL identifier from env, falling back to `default` if unset or unsafe.
+    Restricting to [A-Za-z0-9_] blocks injection even though these come from
+    trusted deployment config, not request input."""
+    value = os.getenv(env_name, default).strip()
+    return value if re.fullmatch(r"[A-Za-z0-9_]+", value) else default
+
+
+# ── Optional cross-table user lookup (push-summary enrichment) ─────────────────
+# Some deployments have a separate users/accounts table and want meeting rows
+# tagged with the resolved user_id/tenant_id. Off by default — set
+# USER_LOOKUP_TABLE to enable; column names are configurable so this repo
+# doesn't hardcode any particular schema.
+_USER_LOOKUP_TABLE: str = os.getenv("USER_LOOKUP_TABLE", "").strip()
+_USER_LOOKUP_EMAIL_COL: str = _safe_identifier("USER_LOOKUP_EMAIL_COLUMN", "email")
+_USER_LOOKUP_ID_COL: str = _safe_identifier("USER_LOOKUP_ID_COLUMN", "user_id")
+_USER_LOOKUP_TENANT_COL: str = _safe_identifier("USER_LOOKUP_TENANT_COLUMN", "tenant_id")
+
+
 def _check_rate_limit(key: str, max_calls: int, window_sec: int = 60) -> None:
     """Raise 429 if more than max_calls have been made within window_sec."""
     now = _time.time()
@@ -56,7 +77,7 @@ def _check_rate_limit(key: str, max_calls: int, window_sec: int = 60) -> None:
 def _require_api_key(x_api_key: str = Header(default="")) -> None:
     """FastAPI dependency — enforces BOT_API_KEY if the env var is set.
     If BOT_API_KEY is not configured the check is skipped (backward compatible)."""
-    if _BOT_API_KEY and x_api_key != _BOT_API_KEY:
+    if _BOT_API_KEY and not hmac.compare_digest(x_api_key, _BOT_API_KEY):
         raise HTTPException(status_code=401, detail="Invalid or missing X-API-Key header")
 
 
@@ -124,7 +145,7 @@ async def health():
 
 
 @router.get("/debug/db")
-async def debug_db():
+async def debug_db(_: None = Depends(_require_api_key)):
     """Temporary: shows DB connection status and actual error."""
     from core.database import DATABASE_URL, _use_sqlite
     import traceback
@@ -610,7 +631,7 @@ async def stop_bot(
 
 
 @router.get("/bot/{meet_code}/fail-screenshot")
-async def bot_fail_screenshot(meet_code: str):
+async def bot_fail_screenshot(meet_code: str, _: None = Depends(_require_api_key)):
     """Returns base64 screenshot saved when bot failed to join (for debugging)."""
     import base64 as _b64
     ss_path = Path(__file__).parent.parent / "uploads" / f"bot_fail_{meet_code}.png"
@@ -624,7 +645,7 @@ async def bot_fail_screenshot(meet_code: str):
 
 
 @router.post("/bot/login/open")
-async def open_login_browser():
+async def open_login_browser(_: None = Depends(_require_api_key)):
     """Open a visible Chrome window for Google login (local/non-headless only).
     In headless/server mode returns status='headless' so the frontend falls back
     to the screenshot-based login flow."""
@@ -643,13 +664,13 @@ async def open_login_browser():
 
 
 @router.get("/bot/login/status")
-async def login_open_status():
+async def login_open_status(_: None = Depends(_require_api_key)):
     """Returns whether the visible login browser is still open."""
     return {"opening": login_session.opening}
 
 
 @router.post("/bot/login/start")
-async def start_login():
+async def start_login(_: None = Depends(_require_api_key)):
     """Launch a headless browser pointed at Google login. Use /bot/login/screenshot to see it."""
     if login_session.active:
         b64 = await login_session.screenshot_b64()
@@ -666,7 +687,7 @@ async def start_login():
 
 
 @router.get("/bot/login/screenshot")
-async def login_screenshot():
+async def login_screenshot(_: None = Depends(_require_api_key)):
     """Return a base64 JPEG screenshot of the current headless browser page."""
     if not login_session.active:
         raise HTTPException(status_code=400, detail="No active login session — POST /bot/login/start first")
@@ -676,7 +697,7 @@ async def login_screenshot():
 
 
 @router.post("/bot/login/click")
-async def login_click(body: LoginClickRequest):
+async def login_click(body: LoginClickRequest, _: None = Depends(_require_api_key)):
     """Click at (x, y) inside the headless browser."""
     if not login_session.active:
         raise HTTPException(status_code=400, detail="No active login session")
@@ -687,7 +708,7 @@ async def login_click(body: LoginClickRequest):
 
 
 @router.post("/bot/login/type")
-async def login_type(body: LoginTypeRequest):
+async def login_type(body: LoginTypeRequest, _: None = Depends(_require_api_key)):
     """Type text into the currently focused element."""
     if not login_session.active:
         raise HTTPException(status_code=400, detail="No active login session")
@@ -698,7 +719,7 @@ async def login_type(body: LoginTypeRequest):
 
 
 @router.post("/bot/login/key")
-async def login_key(body: LoginKeyRequest):
+async def login_key(body: LoginKeyRequest, _: None = Depends(_require_api_key)):
     """Press a keyboard key (e.g. Enter, Tab, Backspace)."""
     if not login_session.active:
         raise HTTPException(status_code=400, detail="No active login session")
@@ -709,7 +730,7 @@ async def login_key(body: LoginKeyRequest):
 
 
 @router.post("/bot/login/navigate")
-async def login_navigate(body: LoginNavRequest):
+async def login_navigate(body: LoginNavRequest, _: None = Depends(_require_api_key)):
     """Navigate the login browser to a URL."""
     if not login_session.active:
         raise HTTPException(status_code=400, detail="No active login session")
@@ -720,7 +741,7 @@ async def login_navigate(body: LoginNavRequest):
 
 
 @router.post("/bot/login/done")
-async def finish_login():
+async def finish_login(_: None = Depends(_require_api_key)):
     """Save the Google session cookies to disk and close the login browser."""
     if not login_session.active:
         raise HTTPException(status_code=400, detail="No active login session")
@@ -731,7 +752,7 @@ async def finish_login():
 
 
 @router.post("/bot/login/abort")
-async def abort_login():
+async def abort_login(_: None = Depends(_require_api_key)):
     """Close the login browser WITHOUT saving session (cancel path)."""
     if not login_session.active:
         return {"status": "not_active"}
@@ -1198,14 +1219,17 @@ async def push_meeting_summary(
     sources = [s.speaker_source for s in segments if s.speaker_source]
     dominant_source = _Counter(sources).most_common(1)[0][0] if sources else None
 
-    # ── 4. Resolve user_id + tenant_id from organizer email ──────────────────
+    # ── 4. Resolve user_id + tenant_id from organizer email (optional) ───────
+    # Only runs if USER_LOOKUP_TABLE is set — see the module-level config above.
+    # This lets deployments with their own users/accounts table enrich rows
+    # here without this repo hardcoding any particular schema.
     user_id = tenant_id = None
-    if meeting.organizer_email:
+    if _USER_LOOKUP_TABLE and meeting.organizer_email:
         try:
             _row = await session.execute(
                 _sql_text(
-                    "SELECT user_id, company_id AS tenant_id "
-                    "FROM `user` WHERE email = :email LIMIT 1"
+                    f"SELECT `{_USER_LOOKUP_ID_COL}` AS user_id, `{_USER_LOOKUP_TENANT_COL}` AS tenant_id "
+                    f"FROM `{_USER_LOOKUP_TABLE}` WHERE `{_USER_LOOKUP_EMAIL_COL}` = :email LIMIT 1"
                 ),
                 {"email": meeting.organizer_email},
             )

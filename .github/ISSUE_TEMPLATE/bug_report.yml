@@ -1,0 +1,59 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check [docs/troubleshooting.md](../../docs/troubleshooting.md) —
+        many "bot won't join" or "no transcript" reports come down to a missing
+        environment variable rather than a bug.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Set BOT_GUEST_MODE=true
+        2. POST /bot/join with meet_url=...
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment method
+      options:
+        - Docker Compose
+        - Local (venv)
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: headless
+    attributes:
+      label: HEADLESS setting
+      placeholder: "true / false"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Backend logs, browser console errors, or screenshots from `uploads/`.
+      render: shell
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit / version
+      description: Output of `git rev-parse HEAD`, if known.

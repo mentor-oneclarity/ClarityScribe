@@ -225,7 +225,7 @@ if LOG_LEVEL == "DEBUG":
         logger.debug("← %s %s  status=%d  %.1fms", request.method, request.url.path, response.status_code, ms)
         return response
 
-from API.routes import router
+from api.routes import router
 app.include_router(router)
 
 # Serve frontend — must be mounted AFTER API routes

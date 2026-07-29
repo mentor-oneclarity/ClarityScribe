@@ -1,8 +1,27 @@
 # 🚀 AI Meeting Bot
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](.python-version)
+[![Docker Compose ready](https://img.shields.io/badge/docker--compose-ready-2496ED.svg?logo=docker&logoColor=white)](docker-compose.yml)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 An open-source bot that joins Google Meet calls, transcribes them in real time, and
 generates AI-powered meeting summaries — with a FastAPI backend, a Streamlit control
 dashboard, and a Playwright-driven browser bot.
+
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Architecture at a Glance](#architecture-at-a-glance)
+- [Project Structure](#project-structure)
+- [Documentation](#documentation)
+- [Security](#security)
+- [Known Limitations](#known-limitations)
+- [Contributing](#contributing)
+- [Changelog](#changelog)
+- [License](#license)
 
 ## Features
 
@@ -24,11 +43,11 @@ dashboard, and a Playwright-driven browser bot.
 ### Option 1 — Docker Compose (recommended)
 
 ```bash
-git clone <repo-url> && cd AI_Corp_Meeting_Transcriber_6050
+git clone <repo-url> && cd <repo-directory>
 cp .env.example .env
 # edit .env with your API keys — see docs/deployment.md#environment-variables
 
-docker-compose up --build
+docker compose up --build
 ```
 
 The dashboard and API are now at `http://localhost:6050` (interactive API docs at
@@ -37,7 +56,7 @@ The dashboard and API are now at `http://localhost:6050` (interactive API docs a
 ### Option 2 — Run locally
 
 ```bash
-git clone <repo-url> && cd AI_Corp_Meeting_Transcriber_6050
+git clone <repo-url> && cd <repo-directory>
 python -m venv venv && source venv/bin/activate   # venv\Scripts\activate on Windows
 pip install -r requirements.txt
 playwright install chromium
@@ -79,22 +98,25 @@ speaker-attribution pipeline — see **[docs/architecture.md](docs/architecture.
 ## Project Structure
 
 ```
-AI_Corp_Meeting_Transcriber_6050/
-├── main.py                  # FastAPI app entry point
-├── API/                     # REST + SSE routes and request/response models
-├── core/                    # Bot lifecycle manager, database layer, logging
-├── bot/                     # Playwright bot: join flow, caption/audio capture, CLI runner
-│   ├── bots/meet_bot.py     # Core bot logic
-│   └── utils/               # STT client, WebRTC audio capture, speaker alignment
-├── helpers/                 # AI summarization, email delivery, translation
-├── streamlit_app/           # Streamlit control dashboard
-├── docs/                    # Documentation (this file links out to all of it)
-├── Dockerfile                # Multi-stage build (Playwright + Chromium baked in)
-├── docker-compose.yml         # Backend + MySQL + Redis + phpMyAdmin
+.
+├── main.py                   # FastAPI app entry point
+├── api/                      # REST + SSE routes and request/response models
+├── core/                     # Bot lifecycle manager, database layer, logging
+├── bot/                       # Playwright bot: join flow, caption/audio capture, CLI runner
+│   ├── bots/meet_bot.py      # Core bot logic
+│   └── utils/                # STT client, WebRTC audio capture, speaker alignment
+├── helpers/                  # AI summarization, email delivery, translation
+├── streamlit_app/            # Streamlit control dashboard
+├── docs/                     # Architecture, deployment, troubleshooting docs
+├── .github/                   # Issue/PR templates, CI workflows, Dependabot config
+├── Dockerfile                 # Multi-stage build (Playwright + Chromium baked in)
+├── docker-compose.yml          # Backend + MySQL + Redis + phpMyAdmin
 ├── requirements.txt
-├── setup_db.py               # Creates database tables (idempotent)
-├── flush_db.py               # Clears table data (destructive, requires confirmation)
-├── startup.sh                 # Container/production entrypoint
+├── pyproject.toml              # ruff/black tool config
+├── .pre-commit-config.yaml     # Formatting, lint, and secret-scan hooks
+├── setup_db.py                 # Creates database tables (idempotent)
+├── flush_db.py                 # Clears table data (destructive, requires confirmation)
+├── startup.sh                   # Container/production entrypoint
 └── .env.example
 ```
 
@@ -103,10 +125,21 @@ AI_Corp_Meeting_Transcriber_6050/
 | Doc | Covers |
 |---|---|
 | [docs/architecture.md](docs/architecture.md) | System design, component reference, database schema, API reference, speaker attribution |
-| [docs/deployment.md](docs/deployment.md) | Local dev, Docker Compose, environment variables, production deployment |
+| [docs/deployment.md](docs/deployment.md) | Local dev, Docker Compose, environment variables, production deployment, security checklist |
 | [docs/google-meet-addon.md](docs/google-meet-addon.md) | Publishing the bot as an in-Meet Google Workspace Add-on |
 | [docs/database.md](docs/database.md) | The `ai_meeting_master` denormalized reporting table |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Common errors, join failures, transcript/speaker issues |
+
+## Security
+
+This bot authenticates to a real Google account and can send email on your behalf —
+please read [SECURITY.md](SECURITY.md) before deploying it anywhere beyond
+`localhost`. In short: **set `BOT_API_KEY`** before exposing the backend to a network
+you don't fully trust, and never commit real credentials — everything sensitive
+belongs in `.env` (gitignored) or your platform's secret manager.
+
+Found a vulnerability? Please report it privately per [SECURITY.md](SECURITY.md)
+rather than opening a public issue.
 
 ## Known Limitations
 
@@ -118,12 +151,16 @@ for details and planned improvements.
 
 ## Contributing
 
-Issues and pull requests are welcome. Before opening one, please check
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for
+dev setup, code style, and the PR process. Please note we have a
+[Code of Conduct](CODE_OF_CONDUCT.md). Before opening an issue, check
 [docs/troubleshooting.md](docs/troubleshooting.md) — many "bot won't join" or "no
 transcript" reports come down to a missing environment variable.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ## License
 
-No license file is currently included in this repository — add one (e.g. MIT,
-Apache-2.0) appropriate for your intended use before publishing or accepting external
-contributions.
+Licensed under the [MIT License](LICENSE).
