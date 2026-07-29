@@ -6,7 +6,7 @@ aiosqlite==0.20.0
 pymysql==1.1.1
 greenlet==3.1.1
 httpx==0.28.1
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 openai==1.57.4
 playwright==1.49.1
 sse-starlette==2.1.3
