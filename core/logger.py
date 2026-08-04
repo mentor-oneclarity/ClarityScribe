@@ -1,12 +1,20 @@
 import logging
 import logging.handlers
 import os
+import sys
 from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# On Windows, the console's default codepage (e.g. cp1252) can't encode the
+# arrows/emoji used in some log messages, which otherwise crashes
+# logging.StreamHandler with UnicodeEncodeError and silently drops the line.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(errors="backslashreplace")
 
 LOGS_DIR = Path(os.getenv("LOGS_DIR", "logs"))
 LOGS_DIR.mkdir(exist_ok=True)
@@ -41,6 +49,7 @@ def configure_logging(
             str(log_path),
             maxBytes=10 * 1024 * 1024,
             backupCount=5,
+            encoding="utf-8",
         )
         file_handler.setLevel(getattr(logging, level))
         file_handler.setFormatter(formatter)
@@ -59,7 +68,7 @@ stt_logger = configure_logging(logger_name="stt", log_file="stt.log")
 if LOG_LEVEL == "DEBUG":
     _db_log_path = LOGS_DIR / "database.log"
     _db_file_handler = logging.handlers.RotatingFileHandler(
-        str(_db_log_path), maxBytes=10 * 1024 * 1024, backupCount=5
+        str(_db_log_path), maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
     )
     _db_formatter = logging.Formatter(
         "%(asctime)s | sqlalchemy | %(levelname)s | %(message)s",

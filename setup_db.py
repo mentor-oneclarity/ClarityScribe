@@ -41,6 +41,9 @@ async def _ensure_database() -> None:
 
 async def _migrate_columns() -> None:
     """Add missing columns to existing tables — uses ONE query for all checks."""
+    if not (_db_host and _db_name and _db_user):
+        return  # SQLite mode — create_all() already built the full schema
+
     from sqlalchemy import text
 
     migrations = [
